@@ -1,0 +1,35 @@
+{
+    "name": "multicoin",
+    "version": "0.0.1",
+    "private": true,
+    "workspaces": {
+        "packages": [
+            "packages/contracts",
+            "packages/client"
+        ],
+        "nohoist": [
+            "packages/client",
+            "packages/client/**"
+        ]
+    },
+    "scripts": {
+        "start:sui": "bash build_scripts/start_sui.sh",
+        "fund": "bash build_scripts/fund_address.sh",
+        "start:local": "mprocs --config mprocs.yaml",
+        "prepare": "husky install",
+        "fmt": "sui move format",
+        "lint": "echo 'Use move-analyzer in IDE'",
+        "client:dev": "yarn workspace client dev",
+        "client:build": "yarn workspace client build"
+    },
+    "devDependencies": {
+        "husky": "^9.0.0"
+    },
+    "lint-staged": {
+        "/packages/contracts/sources/**/*.move": [
+            "sui move format --install",
+            "git add"
+        ]
+    },
+    "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}

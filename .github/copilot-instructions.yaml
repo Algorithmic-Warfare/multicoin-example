@@ -1,0 +1,377 @@
+# copilot-instructions.yaml
+# GitHub Copilot configuration for Move programming language projects
+
+language: move
+version: "1.0"
+
+# Language identification and context
+language_context:
+    description: |
+        This is a Move programming language project. Move is a resource-oriented 
+        language for secure smart contract development with linear types and 
+        formal verification support. It uses Rust-like syntax but with unique 
+        ownership and resource management semantics.
+
+    file_extensions:
+        - .move
+        - .mvir
+
+    syntax_highlighting: rust # Use Rust highlighting as closest match
+
+# Core language rules Copilot should follow
+language_rules:
+    - "Move is NOT object-oriented - it's resource-oriented with no inheritance"
+    - "Resources cannot be copied or dropped implicitly - they must be explicitly handled"
+    - "All module members are private by default - use 'public' for external access"
+    - "Structs require explicit abilities: copy, drop, store, key"
+    - "Functions use 'fun' keyword, not 'fn' like Rust"
+    - "Module names use snake_case, struct names use PascalCase"
+    - "Always use explicit type annotations in function signatures"
+    - "References are & for immutable, &mut for mutable"
+    - "Use 'let' for immutable bindings, 'let mut' for mutable"
+    - "Vector type is vector<T>, not Vec<T> or Vector<T>"
+
+# Common patterns and idioms
+patterns:
+    module_declaration:
+        template: |
+            module {address}::{module_name} {
+                use std::string::String;
+                use std::vector;
+                
+                // Constants
+                const E_INVALID_OPERATION: u64 = 1;
+                
+                // Structs
+                public struct {StructName} has key, store {
+                    id: UID,
+                    field: Type,
+                }
+                
+                // Functions
+                public fun new(ctx: &mut TxContext): {StructName} {
+                    {StructName} {
+                        id: object::new(ctx),
+                        field: value,
+                    }
+                }
+            }
+
+    error_handling:
+        template: |
+            // Define error constants at module level
+            const E_INSUFFICIENT_BALANCE: u64 = 0;
+            const E_INVALID_AMOUNT: u64 = 1;
+            const E_NOT_AUTHORIZED: u64 = 2;
+
+            // Use assert! for validation
+            assert!(condition, E_ERROR_CODE);
+
+            // Or abort directly
+            if (!condition) {
+                abort E_ERROR_CODE
+            }
+
+    resource_lifecycle:
+        template: |
+            // Creating a resource
+            let resource = ResourceType { field: value };
+
+            // Transferring ownership
+            transfer::public_transfer(resource, recipient);
+
+            // Borrowing for reading
+            let value = borrow_field(&resource);
+
+            // Borrowing for mutation
+            modify_resource(&mut resource);
+
+            // Destroying (must destructure all fields)
+            let ResourceType { field } = resource;
+
+    testing:
+        template: |
+            #[test]
+            fun test_function_name() {
+                // Setup
+                let scenario = test_scenario::begin(addr);
+                
+                // Execute
+                {
+                    // Test logic here
+                };
+                
+                // Assert
+                assert!(condition, 0);
+                
+                // Cleanup
+                test_scenario::end(scenario);
+            }
+
+            #[test, expected_failure(abort_code = E_ERROR_CODE)]
+            fun test_failure_case() {
+                // Test that should abort
+            }
+
+# Platform-specific configurations
+platforms:
+    sui:
+        rules:
+            - "Objects require 'key' ability and first field must be 'id: UID'"
+            - "Use object:: module for object operations"
+            - "Use transfer:: module for ownership transfers"
+            - "Use test_scenario:: for testing"
+            - "Entry functions use 'entry' modifier"
+            - "TxContext is passed as last parameter to entry functions"
+        imports:
+            - "use sui::object::{Self, UID};"
+            - "use sui::transfer;"
+            - "use sui::tx_context::{Self, TxContext};"
+
+    aptos:
+        rules:
+            - "Use signer for authentication"
+            - "Global storage uses move_to, move_from, borrow_global"
+            - "Resources stored under account addresses"
+            - "Use 'acquires' annotation for global storage access"
+        imports:
+            - "use std::signer;"
+            - "use aptos_framework::account;"
+
+# Code generation preferences
+generation_preferences:
+    prefer_explicit_types: true
+    prefer_destructuring: true
+    prefer_assert_over_if_abort: true
+    max_function_lines: 50
+    max_module_lines: 500
+
+    struct_abilities_order:
+        - drop
+        - copy
+        - store
+        - key
+
+    import_style: |
+        // Group imports by source
+        use std::string::{Self, String};
+        use std::vector;
+
+        use sui::object::{Self, UID};
+        use sui::transfer;
+
+        use app::other_module;
+
+# Common mistakes to avoid
+avoid:
+    - pattern: "fn function_name"
+      correct: "fun function_name"
+      reason: "Move uses 'fun' keyword, not 'fn'"
+
+    - pattern: "Vec<T>"
+      correct: "vector<T>"
+      reason: "Move uses 'vector<T>' for vector types"
+
+    - pattern: "String"
+      correct: "string::String or std::string::String"
+      reason: "String must be imported from std::string module"
+
+    - pattern: "impl StructName"
+      correct: "Define functions in module scope"
+      reason: "Move doesn't have impl blocks - functions are module-level"
+
+    - pattern: "pub fn"
+      correct: "public fun"
+      reason: "Move uses 'public fun' for public functions"
+
+    - pattern: "self.field"
+      correct: "struct_instance.field"
+      reason: "Move doesn't have 'self' - use explicit struct reference"
+
+    - pattern: "return value;"
+      correct: "value"
+      reason: "Move uses implicit returns - last expression is returned"
+
+    - pattern: "match expression"
+      correct: "if/else or destructuring"
+      reason: "Move doesn't have match expressions"
+
+# Snippets and templates
+snippets:
+    new_module:
+        trigger: "module"
+        body: |
+            module ${1:address}::${2:module_name} {
+                ${3:// Module content}
+            }
+
+    new_struct:
+        trigger: "struct"
+        body: |
+            public struct ${1:StructName} has ${2:drop, store} {
+                ${3:field}: ${4:Type},
+            }
+
+    new_object_struct_sui:
+        trigger: "object"
+        body: |
+            public struct ${1:ObjectName} has key, store {
+                id: UID,
+                ${2:field}: ${3:Type},
+            }
+
+    new_function:
+        trigger: "fun"
+        body: |
+            public fun ${1:function_name}(${2:params}): ${3:ReturnType} {
+                ${4:// Function body}
+            }
+
+    new_entry_function:
+        trigger: "entry"
+        body: |
+            public entry fun ${1:function_name}(${2:params}, ctx: &mut TxContext) {
+                ${3:// Entry function body}
+            }
+
+    new_test:
+        trigger: "test"
+        body: |
+            #[test]
+            fun test_${1:function_name}() {
+                ${2:// Test implementation}
+            }
+
+    assert_statement:
+        trigger: "assert"
+        body: "assert!(${1:condition}, ${2:E_ERROR_CODE});"
+
+# Documentation patterns
+documentation:
+    module_header: |
+        /// # Module: {module_name}
+        /// 
+        /// ## Description
+        /// {description}
+        /// 
+        /// ## Constants
+        /// - `E_ERROR_NAME`: Error code for {error_description}
+        /// 
+        /// ## Structs
+        /// - `StructName`: {struct_description}
+        /// 
+        /// ## Public Functions
+        /// - `function_name`: {function_description}
+
+    function_doc: |
+        /// {brief_description}
+        /// 
+        /// # Arguments
+        /// * `param_name` - {param_description}
+        /// 
+        /// # Returns
+        /// * `ReturnType` - {return_description}
+        /// 
+        /// # Errors
+        /// * `E_ERROR_CODE` - {error_condition}
+
+    struct_doc: |
+        /// {struct_description}
+        /// 
+        /// # Fields
+        /// * `field_name` - {field_description}
+
+# Type inference hints
+type_hints:
+    common_types:
+        - "address: 32-byte identifier for accounts and objects"
+        - "bool: Boolean value (true/false)"
+        - "u8, u16, u32, u64, u128, u256: Unsigned integers"
+        - "vector<T>: Dynamic array of type T"
+        - "string::String: UTF-8 encoded string"
+        - "UID: Unique identifier for Sui objects"
+        - "TxContext: Transaction context in Sui"
+        - "signer: Transaction signer in Aptos"
+
+    generic_constraints:
+        - "T: copy - Type can be copied"
+        - "T: drop - Type can be dropped"
+        - "T: store - Type can be stored"
+        - "T: key - Type can be used as storage key"
+
+# Integration with Move tools
+tools:
+    move_cli:
+        build: "move build"
+        test: "move test"
+        coverage: "move test --coverage"
+        publish: "move publish"
+
+    sui_cli:
+        build: "sui move build"
+        test: "sui move test"
+        publish: "sui client publish"
+
+    aptos_cli:
+        build: "aptos move compile"
+        test: "aptos move test"
+        publish: "aptos move publish"
+
+# Package manager usage (Yarn workspaces)
+package_management:
+    workspace_tooling: |
+        This repository uses Yarn (classic) with workspaces. Prefer the following commands:
+          - yarn install              # install all workspace dependencies
+          - yarn workspace contracts <script>  # run script in Move contracts package
+          - yarn workspace client dev          # start React client
+          - yarn client:dev                    # convenience root script alias
+          - yarn client:build                  # build client
+        Avoid using npm commands to prevent lockfile drift. Remove package-lock.json if reintroduced.
+    scripts_reference:
+        client_dev: "yarn workspace client dev"
+        client_build: "yarn workspace client build"
+        format_move: "sui move format"
+    notes: |
+        Copilot should suggest Yarn-based commands instead of npm. When generating instructions, prefer:
+        `yarn workspace <name> <script>` for workspace-specific tasks.
+
+# Best practices enforcement
+best_practices:
+    - "Always validate inputs at function entry"
+    - "Use constants for error codes, never magic numbers"
+    - "Prefer immutable references over mutable when possible"
+    - "Destructure resources completely when destroying"
+    - "Group related functionality in the same module"
+    - "Write tests for all public functions"
+    - "Use meaningful names for error constants starting with E_"
+    - "Document all public functions and structs"
+    - "Keep functions under 50 lines when possible"
+    - "Use abilities explicitly - don't add unnecessary ones"
+
+# Context awareness
+context_awareness:
+    file_structure:
+        - "sources/: Contains .move source files"
+        - "tests/: Contains test modules"
+        - "Move.toml: Package manifest"
+        - "CONTEXTS/: Contains this copilot configuration"
+
+    import_resolution:
+        - "Check Move.toml for dependency addresses"
+        - "Resolve named addresses from [addresses] section"
+        - "Standard library modules under std::"
+        - "Framework modules under sui:: or aptos_framework::"
+
+# Additional notes for Copilot
+copilot_notes: |
+    When generating Move code:
+    1. Always consider resource safety - resources must be consumed or transferred
+    2. Remember Move has no null/nil - use Option<T> pattern when needed
+    3. Entry functions are transaction entry points - they have special rules
+    4. Testing is done with #[test] attributes, not separate test files
+    5. Move uses abort codes for errors, not exceptions or Result types
+    6. Generic functions use angle brackets: fun name<T>()
+    7. Vector operations require std::vector module
+    8. String operations require std::string module
+    9. No implicit type conversions - be explicit with casts
+    10. References cannot be stored in structs unless struct has 'store' ability

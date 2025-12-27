@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "move-language.move-analyzer",
+    "tamasfe.even-better-toml",
+    "editorconfig.editorconfig"
+  ]
+}

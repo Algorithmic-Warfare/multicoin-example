@@ -1,0 +1,25 @@
+{
+    "name": "contracts",
+    "version": "0.0.1",
+    "scripts": {
+        "build": "bash ./build_scripts/build.sh",
+        "build:watch": "watchexec -w sources -e move -r '",
+        "deploy:watch": "watchexec -e json -w build_artifacts.json -- bash build_scripts/deploy_watch.sh",
+        "rebuild:watch": "watchexec -w sources -e move --postpone --debounce 400ms -- bash build_scripts/test.sh",
+        "publish:local": "bash scripts/publish_local.sh",
+        "test": "sui move test",
+        "fmt": "sui move format",
+        "lint": "echo 'Use move-analyzer in IDE'",
+        "prepare": "husky install"
+    },
+    "devDependencies": {
+        "husky": "^9.0.0",
+        "lint-staged": "^15.0.0"
+    },
+    "lint-staged": {
+        "/sources/**/*.move": [
+            "sui move format --install",
+            "git add"
+        ]
+    }
+}

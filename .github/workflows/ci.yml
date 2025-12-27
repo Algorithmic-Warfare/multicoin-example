@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Sui CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq wget ca-certificates libssl-dev pkg-config build-essential
+          wget -qO- https://get.sui.io | sh
+          echo "$HOME/.sui/bin" >> $GITHUB_PATH
+      - name: Show Sui version
+        run: sui --version || true
+      - name: Build
+        run: sui move build
+      - name: Test
+        run: sui move test
+      - name: Format check
+        run: sui move format --check
+
+  deploy-testnet:
+    if: github.ref == 'refs/heads/main'
+    needs: build-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Sui CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq wget ca-certificates libssl-dev pkg-config build-essential
+          wget -qO- https://get.sui.io | sh
+          echo "$HOME/.sui/bin" >> $GITHUB_PATH
+      - name: Configure testnet env
+        env:
+          SUI_ENV: testnet
+        run: |
+          sui client active-env || sui client switch --env testnet
+      - name: Dry-run publish
+        run: sui client publish --skip-fetch-latest-gas-price --gas-budget 30000000 --dry-run .

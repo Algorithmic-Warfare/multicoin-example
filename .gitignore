@@ -1,0 +1,17 @@
+# Node
+node_modules/
+package-lock.json
+
+# Sui build artifacts
+.build/
+build/
+Move.lock
+build_artifacts.json
+.env
+
+
+# Logs
+*.log
+
+# MacOS
+.DS_Store
