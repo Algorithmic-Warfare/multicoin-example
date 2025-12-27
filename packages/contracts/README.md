@@ -7,7 +7,7 @@ A complete implementation of an ERC1155-like multi-token standard on Sui blockch
 ### Core Capabilities
 - **Multiple Token Types**: Single collection can manage many different token types
 - **Batch Operations**: Mint, transfer, and burn multiple token types in one transaction
-- **Bit-Packed Token IDs**: Efficient u128 token IDs encoding location (64 bits) + item (64 bits)
+- **Bit-Packed Token IDs**: Efficient u128 token IDs encoding assembly (64 bits) + item (64 bits)
 - **Metadata Support**: Optional on-chain metadata per token type
 - **Events**: Full event emission for minting, burning, and transfers
 - **Zero Balance Handling**: Create and destroy zero-value balances safely
@@ -56,14 +56,14 @@ public struct Balance has key, store {
 
 Token IDs are u128 values with bit-packing:
 - **Upper 64 bits**: Location ID (e.g., game zone, dungeon level)
-- **Lower 64 bits**: Item ID (e.g., item type within location)
+- **Lower 64 bits**: Item ID (e.g., item type within assembly)
 
 ```move
 // Create token ID
-let token_id = make_token_id(100, 42); // location=100, item=42
+let token_id = make_token_id(100, 42); // assembly=100, item=42
 
 // Extract components
-let location = location_id(token_id); // 100
+let assembly = assembly_id(token_id); // 100
 let item = item_id(token_id);         // 42
 ```
 
@@ -163,8 +163,8 @@ zero.destroy_zero();
 - `new_collection(ctx)` - Returns (Collection, CollectionCap)
 
 ### Token ID Utilities
-- `make_token_id(location_id, item_id)` - Pack into u128
-- `location_id(token_id)` - Extract location
+- `make_token_id(assembly_id, item_id)` - Pack into u128
+- `assembly_id(token_id)` - Extract assembly
 - `item_id(token_id)` - Extract item
 
 ### Metadata
