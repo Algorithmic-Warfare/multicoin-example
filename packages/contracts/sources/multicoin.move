@@ -73,7 +73,7 @@ const EInvalidArg: u64 = 3;
 const EZeroAmount: u64 = 4;
 
 /*********************************
- * Constants for bit packing
+ * Constants for bit packing (EveF-specific implementation of token IDs)
  *********************************/
 const LOCATION_BITS: u8 = 64;
 const ITEM_MASK: u128 = (1u128 << 64) - 1;
