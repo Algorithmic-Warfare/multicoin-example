@@ -1,3 +1,63 @@
+/// # MultiCoin - ERC-1155 Style Multi-Token Standard for Sui
+///
+/// This module implements a fungible multi-token system similar to Ethereum's ERC-1155 standard,
+/// allowing a single collection to manage multiple token types with independent balances and supplies.
+///
+/// ## Core Concepts
+///
+/// - **Collection**: A shared object representing a token collection (similar to an ERC-1155 contract).
+///   Each collection can contain (2^128)-1 token types identified by u128 token IDs.
+///
+/// - **Token ID**: A 128-bit identifier that can be bit-packed to encode semantic meaning.
+///   By default, uses a location_id (upper 64 bits) + item_id (lower 64 bits) scheme,
+///   enabling hierarchical token organization (e.g., items per location in a game). 
+///   If this was to be generalized outside of this game - the id would just be _some_
+///   unique u128.
+///
+/// - **Balance**: An owned object representing a user's balance of a specific token type.
+///   Similar to Sui's Coin type, balances can be split, merged, and transferred independently.
+///
+/// - **CollectionCap**: Admin capability for minting tokens and managing metadata.
+///   Only the holder of this capability can mint new tokens or set metadata.
+///
+/// ## Key Features
+///
+/// - **Flexible Token IDs**: Bit-packed u128 IDs support token organization
+/// - **Independent Balances**: Each token type has its own supply and owned balance objects
+/// - **Coin-like Operations**: Split, merge, and transfer balances with type safety
+/// - **Metadata Support**: Optional on-chain metadata storage per token type
+/// - **Batch Operations**: Mint and transfer multiple token types efficiently
+/// - **Event Emission**: Track all mints, burns, and transfers on-chain
+///
+/// ## Usage Example
+///
+/// ```move
+/// // Create collection
+/// let (collection, cap) = multicoin::new_collection(ctx);
+/// 
+/// // Create token ID for location 1, item 5
+/// let token_id = multicoin::make_token_id(1, 5);
+/// 
+/// // Mint 100 tokens
+/// let balance = multicoin::mint_balance(&cap, &mut collection, token_id, 100, ctx);
+/// 
+/// // Split and transfer 30 tokens
+/// let split_balance = balance.split(30, ctx);
+/// transfer::transfer(split_balance, recipient);
+/// ```
+///
+/// ## Token ID Scheme
+///
+/// Default bit-packing: `token_id = (location_id << 64) | item_id`
+/// - Upper 64 bits: location_id (spatial/categorical grouping)
+/// - Lower 64 bits: item_id (specific item within location)
+///
+/// This scheme enables:
+/// - Querying all items at a location
+/// - Organizing tokens by game world regions
+/// - Hierarchical inventory systems
+///
+/// Custom schemes can use the full 128-bit space for alternative encodings.
 module multicoin::multicoin;
 
 use sui::event;
